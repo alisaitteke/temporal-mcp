@@ -1,6 +1,6 @@
 # temporal-mcp
 
-![Temporal MCP Banner](https://raw.githubusercontent.com/alisaitteke/temporal-mcp/master/social_preview.jpg)
+![Temporal MCP Banner](https://raw.githubusercontent.com/alisaitteke/temporal-mcp/refs/heads/master/temporal-mcp.jpg)
 
 MCP server for the [Temporal](https://temporal.io) HTTP API. Manage workflows, namespaces, schedules, and more directly from Cursor, Claude Code, or any MCP-compatible IDE.
 
