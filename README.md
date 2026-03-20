@@ -157,16 +157,17 @@ claude mcp add temporal \
 
 ### Tool tiers
 
-**`essential` (default — 11 tools)**
-Core workflow operations. Keeps the LLM context lean.
+| `TEMPORAL_TOOLS` | # | Role |
+|---|---:|---|
+| `essential` | 11 | **Default.** Cluster + namespaces + everyday workflow run/debug (list, describe, start, signal, query, cancel, terminate, history). Smallest tool list for the LLM. |
+| `standard` | 23 | **essential** plus counts, pause/unpause, signal-with-start, schedules, activities, task queue description, and search attributes. |
+| `all` | 36 | **standard** plus batch operations, worker deployments, Nexus endpoints, and workflow rules. |
 
-`get_cluster_info`, `list_namespaces`, `describe_namespace`, `list_workflows`, `describe_workflow`, `start_workflow`, `signal_workflow`, `query_workflow`, `cancel_workflow`, `terminate_workflow`, `get_workflow_history`
-
-**`standard` (23 tools)**
-Adds `count_workflows`, `pause_workflow`, `unpause_workflow`, `signal_with_start_workflow`, schedules, activities, task queues, and search attributes. Good balance for active development.
-
-**`all` (36 tools)**
-Everything: adds batch operations, worker deployments, Nexus endpoints, and workflow rules.
+| Set | Tools |
+|---|---|
+| `essential` only (11) | `get_cluster_info`, `list_namespaces`, `describe_namespace`, `list_workflows`, `describe_workflow`, `start_workflow`, `signal_workflow`, `query_workflow`, `cancel_workflow`, `terminate_workflow`, `get_workflow_history` |
+| Also enabled with `standard` (+12, 23 total with essential) | `count_workflows`, `pause_workflow`, `unpause_workflow`, `signal_with_start_workflow`, `list_schedules`, `describe_schedule`, `create_schedule`, `delete_schedule`, `list_activities`, `describe_activity`, `describe_task_queue`, `list_search_attributes` |
+| Also enabled with `all` (+13, 36 total with standard) | `list_batch_operations`, `describe_batch_operation`, `stop_batch_operation`, `list_worker_deployments`, `describe_worker_deployment`, `list_nexus_endpoints`, `get_nexus_endpoint`, `create_nexus_endpoint`, `delete_nexus_endpoint`, `list_workflow_rules`, `describe_workflow_rule`, `create_workflow_rule`, `delete_workflow_rule` |
 
 ## Structured Output
 
