@@ -1,0 +1,51 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.alisaitteke/temporal-mcp",
+  "description": "MCP server for the Temporal HTTP API. Manage workflows, namespaces, schedules, batch operations, Nexus endpoints, and more from any MCP-compatible IDE. Tool tiers (essential vs all) keep default context lean.",
+  "repository": {
+    "url": "https://github.com/alisaitteke/temporal-mcp",
+    "source": "github"
+  },
+  "version": "0.1.1",
+  "mcpName": "io.github.alisaitteke/temporal-mcp",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "@alisaitteke/temporal-mcp",
+      "version": "0.1.1",
+      "transport": {
+        "type": "stdio"
+      },
+      "environmentVariables": [
+        {
+          "name": "TEMPORAL_ADDRESS",
+          "description": "Temporal HTTP API base URL (e.g. http://localhost:8233 for dev server, or your cloud endpoint)",
+          "format": "string",
+          "isRequired": true,
+          "isSecret": false
+        },
+        {
+          "name": "TEMPORAL_NAMESPACE",
+          "description": "Default namespace for API calls (defaults to \"default\" if unset)",
+          "format": "string",
+          "isRequired": false,
+          "isSecret": false
+        },
+        {
+          "name": "TEMPORAL_API_KEY",
+          "description": "API key when connecting to Temporal Cloud or mTLS-protected endpoints that expect a bearer token",
+          "format": "string",
+          "isRequired": false,
+          "isSecret": true
+        },
+        {
+          "name": "TEMPORAL_TOOLS",
+          "description": "Tool set: \"essential\" (default, ~11 tools) or \"all\" for the full HTTP API surface",
+          "format": "string",
+          "isRequired": false,
+          "isSecret": false
+        }
+      ]
+    }
+  ]
+}

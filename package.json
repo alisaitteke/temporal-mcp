@@ -12,7 +12,8 @@
     "dist",
     "bin",
     "README.md",
-    "mcp.json"
+    "mcp.json",
+    "server.json"
   ],
   "mcpName": "io.github.alisaitteke/temporal-mcp",
   "scripts": {

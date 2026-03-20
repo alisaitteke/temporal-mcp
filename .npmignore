@@ -14,6 +14,7 @@ node_modules/
 !README.md
 !LICENSE
 !mcp.json
+!server.json
 
 # Config files
 package-lock.json
