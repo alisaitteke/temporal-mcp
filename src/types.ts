@@ -76,8 +76,5 @@ export interface TemporalApiError {
   details?: unknown[];
 }
 
-/** Standard MCP tool result content block. */
-export interface ToolResult {
-  content: Array<{ type: 'text'; text: string }>;
-  isError?: boolean;
-}
+/** Standard MCP tool result — re-exported from the SDK for convenience. */
+export type { CallToolResult as ToolResult } from '@modelcontextprotocol/sdk/types.js';
