@@ -1,0 +1,29 @@
+# Ignore development files
+node_modules/
+*.log
+
+# Keep compiled files
+!dist/
+!bin/
+
+# Keep important files
+!README.md
+!LICENSE
+!CHANGELOG.md
+!server.json
+
+# Defaults
+package-lock.json
+tsconfig.json
+tsup.config.ts
+vitest.config.t
+.gitignore
+DEVELOPMENT.md
+CONTRIBUTING.md
+coverage
+.taskmaster
+.idea
+app_data
+.mcpregistry_registry_token
+.mcpregistry_github_token
+
