@@ -1,8 +1,10 @@
-# temporal-mcp
+# Temporal.io MCP Server
 
 ![Temporal MCP Banner](https://raw.githubusercontent.com/alisaitteke/temporal-mcp/refs/heads/master/temporal-mcp.jpg)
 
 MCP server for the [Temporal](https://temporal.io) HTTP API. Manage workflows, namespaces, schedules, and more directly from Cursor, Claude Code, or any MCP-compatible IDE.
+
+> **Disclaimer:** This is an independent, community-built MCP server and is not affiliated with, endorsed by, or officially supported by [Temporal Technologies, Inc.](https://temporal.io)
 
 **32 tools** covering the full Temporal HTTP API surface. By default, only the 11 most essential tools are exposed to keep the LLM context lean — see [Tool tiers](#tool-tiers).
 
