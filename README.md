@@ -1,5 +1,7 @@
 # temporal-mcp
 
+![Temporal MCP Banner](./social_preview.jpg)
+
 MCP server for the [Temporal](https://temporal.io) HTTP API. Manage workflows, namespaces, schedules, and more directly from Cursor, Claude Code, or any MCP-compatible IDE.
 
 **32 tools** covering the full Temporal HTTP API surface. By default, only the 11 most essential tools are exposed to keep the LLM context lean — see [Tool tiers](#tool-tiers).
@@ -185,3 +187,23 @@ Use local path instead of npx:
 ## License
 
 MIT
+
+## Contributors
+
+<table>
+  <tr>
+    <td align="center">
+      <a href="https://github.com/alisaitteke">
+        <img src="https://github.com/alisaitteke.png" width="100px;" alt="Ali Sait Teke"/>
+        <br />
+        <sub><b>Ali Sait Teke</b></sub>
+      </a>
+      <br />
+      <sub>Creator & Maintainer</sub>
+    </td>
+  </tr>
+</table>
+
+Thanks to everyone who helps improve this project!
+
+[![Contributors](https://img.shields.io/github/contributors/alisaitteke/temporal-mcp?style=flat-square)](https://github.com/alisaitteke/temporal-mcp/graphs/contributors)
