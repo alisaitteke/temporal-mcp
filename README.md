@@ -6,7 +6,7 @@ MCP server for the [Temporal](https://temporal.io) HTTP API. Manage workflows, n
 
 > **Disclaimer:** This is an independent, community-built MCP server and is not affiliated with, endorsed by, or officially supported by [Temporal Technologies, Inc.](https://temporal.io)
 
-**32 tools** covering the full Temporal HTTP API surface. By default, only the 11 most essential tools are exposed to keep the LLM context lean — see [Tool tiers](#tool-tiers).
+**36 tools** covering the full Temporal HTTP API surface. By default, only the 11 most essential tools are exposed to keep the LLM context lean — see [Tool tiers](#tool-tiers).
 
 ## Tools
 
@@ -24,13 +24,17 @@ MCP server for the [Temporal](https://temporal.io) HTTP API. Manage workflows, n
 ### Workflows
 | Tool | What it does |
 |---|---|
+| `count_workflows` | Count executions matching a visibility query |
 | `list_workflows` | List or search executions using visibility query syntax |
 | `describe_workflow` | Status, type, task queue, start/close time |
 | `start_workflow` | Start a new workflow execution |
 | `signal_workflow` | Send a signal to a running workflow |
+| `signal_with_start_workflow` | Start + signal in one atomic call (or signal if already running) |
 | `query_workflow` | Query workflow state via a registered query handler |
 | `cancel_workflow` | Request graceful cancellation |
 | `terminate_workflow` | Force-terminate immediately (no cleanup) |
+| `pause_workflow` | Pause execution (stops scheduling new tasks) |
+| `unpause_workflow` | Resume a paused workflow |
 | `get_workflow_history` | Event history with human-readable summaries |
 
 ### Schedules
@@ -149,17 +153,26 @@ claude mcp add temporal \
 | `TEMPORAL_ADDRESS` | Yes | — | Temporal server base URL |
 | `TEMPORAL_NAMESPACE` | No | `default` | Default namespace for all tools |
 | `TEMPORAL_API_KEY` | No | — | Bearer token for authenticated clusters |
-| `TEMPORAL_TOOLS` | No | `essential` | Tool set to expose: `essential` (11 core tools) or `all` (32 tools) |
+| `TEMPORAL_TOOLS` | No | `essential` | Tool set: `essential`, `standard`, or `all` |
 
 ### Tool tiers
 
 **`essential` (default — 11 tools)**
-Covers everyday workflow development. Keeps the LLM context lean.
+Core workflow operations. Keeps the LLM context lean.
 
 `get_cluster_info`, `list_namespaces`, `describe_namespace`, `list_workflows`, `describe_workflow`, `start_workflow`, `signal_workflow`, `query_workflow`, `cancel_workflow`, `terminate_workflow`, `get_workflow_history`
 
-**`all` (32 tools)**
-Adds schedules, activities, batch operations, worker deployments, Nexus endpoints, workflow rules, task queues, and search attributes.
+**`standard` (23 tools)**
+Adds `count_workflows`, `pause_workflow`, `unpause_workflow`, `signal_with_start_workflow`, schedules, activities, task queues, and search attributes. Good balance for active development.
+
+**`all` (36 tools)**
+Everything: adds batch operations, worker deployments, Nexus endpoints, and workflow rules.
+
+## Structured Output
+
+Key tools return both a human-readable text summary and a machine-readable `structuredContent` JSON object. Clients that support MCP structured output (e.g. Claude) can use the structured data for further processing without parsing text.
+
+Tools with structured output: `get_cluster_info`, `list_namespaces`, `list_workflows`, `describe_workflow`, `count_workflows`, `list_schedules`, `list_activities`.
 
 ## Local Development
 

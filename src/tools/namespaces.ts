@@ -74,7 +74,23 @@ export async function handleListNamespaces(
     lines.push(`*Next page token: ${data.nextPageToken}*`);
   }
 
-  return { content: [{ type: 'text', text: lines.join('\n') }] };
+  return {
+    content: [{ type: 'text', text: lines.join('\n') }],
+    structuredContent: {
+      namespaces: namespaces.map((ns) => {
+        const info = ns.namespaceInfo as Record<string, unknown> | undefined;
+        const config = ns.config as Record<string, unknown> | undefined;
+        return {
+          name: info?.name,
+          state: info?.state,
+          description: info?.description,
+          ownerEmail: info?.ownerEmail,
+          retention: config?.workflowExecutionRetentionPeriod,
+        };
+      }),
+      nextPageToken: data.nextPageToken,
+    },
+  };
 }
 
 export async function handleDescribeNamespace(

@@ -50,5 +50,14 @@ export async function handleGetClusterInfo(
   }
   if (systemInfo.serverVersion) lines.push(`- Server Version: ${systemInfo.serverVersion}`);
 
-  return { content: [{ type: 'text', text: lines.join('\n') }] };
+  return {
+    content: [{ type: 'text', text: lines.join('\n') }],
+    structuredContent: {
+      clusterId: clusterInfo.clusterId,
+      clusterName: clusterInfo.clusterName,
+      serverVersion: clusterInfo.serverVersion ?? systemInfo.serverVersion,
+      historyShardCount: clusterInfo.historyShardCount,
+      capabilities: caps ? Object.keys(caps).filter((k) => (caps as Record<string, unknown>)[k] === true) : [],
+    },
+  };
 }

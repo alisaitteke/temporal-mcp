@@ -20,8 +20,10 @@ import {
   workflowToolDefinitions,
   listWorkflowsSchema, describeWorkflowSchema, startWorkflowSchema,
   signalWorkflowSchema, queryWorkflowSchema, cancelWorkflowSchema, terminateWorkflowSchema,
+  countWorkflowsSchema, pauseWorkflowSchema, unpauseWorkflowSchema, signalWithStartWorkflowSchema,
   handleListWorkflows, handleDescribeWorkflow, handleStartWorkflow,
   handleSignalWorkflow, handleQueryWorkflow, handleCancelWorkflow, handleTerminateWorkflow,
+  handleCountWorkflows, handlePauseWorkflow, handleUnpauseWorkflow, handleSignalWithStartWorkflow,
 } from './tools/workflows.js';
 import {
   historyToolDefinitions,
@@ -92,9 +94,32 @@ const ESSENTIAL_TOOLS = new Set([
   'get_workflow_history',
 ]);
 
-function resolveToolTier(): 'essential' | 'all' {
+/**
+ * Extended set for teams actively developing and operating Temporal.
+ * Adds count, pause/unpause, signal-with-start, schedules, activities,
+ * task queues, and search attributes on top of essential.
+ */
+const STANDARD_TOOLS = new Set([
+  ...ESSENTIAL_TOOLS,
+  'count_workflows',
+  'pause_workflow',
+  'unpause_workflow',
+  'signal_with_start_workflow',
+  'list_schedules',
+  'describe_schedule',
+  'create_schedule',
+  'delete_schedule',
+  'list_activities',
+  'describe_activity',
+  'describe_task_queue',
+  'list_search_attributes',
+]);
+
+function resolveToolTier(): 'essential' | 'standard' | 'all' {
   const val = (process.env.TEMPORAL_TOOLS ?? 'essential').toLowerCase();
-  return val === 'all' ? 'all' : 'essential';
+  if (val === 'all') return 'all';
+  if (val === 'standard') return 'standard';
+  return 'essential';
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -165,7 +190,9 @@ async function main(): Promise<void> {
 
   const tools = tier === 'all'
     ? allToolDefs
-    : allToolDefs.filter((t) => ESSENTIAL_TOOLS.has(t.name));
+    : allToolDefs.filter((t) =>
+        tier === 'standard' ? STANDARD_TOOLS.has(t.name) : ESSENTIAL_TOOLS.has(t.name)
+      );
 
   server.setRequestHandler(ListToolsRequestSchema, async () => ({ tools }));
 
@@ -227,6 +254,28 @@ async function main(): Promise<void> {
         const parsed = parseArgs(terminateWorkflowSchema, args);
         if (!parsed.ok) return parsed.error;
         return runTool(() => handleTerminateWorkflow(parsed.data, client));
+      }
+
+      // ── Workflow control (pause / unpause / count / signal-with-start) ───
+      case 'count_workflows': {
+        const parsed = parseArgs(countWorkflowsSchema, args);
+        if (!parsed.ok) return parsed.error;
+        return runTool(() => handleCountWorkflows(parsed.data, client));
+      }
+      case 'pause_workflow': {
+        const parsed = parseArgs(pauseWorkflowSchema, args);
+        if (!parsed.ok) return parsed.error;
+        return runTool(() => handlePauseWorkflow(parsed.data, client));
+      }
+      case 'unpause_workflow': {
+        const parsed = parseArgs(unpauseWorkflowSchema, args);
+        if (!parsed.ok) return parsed.error;
+        return runTool(() => handleUnpauseWorkflow(parsed.data, client));
+      }
+      case 'signal_with_start_workflow': {
+        const parsed = parseArgs(signalWithStartWorkflowSchema, args);
+        if (!parsed.ok) return parsed.error;
+        return runTool(() => handleSignalWithStartWorkflow(parsed.data, client));
       }
 
       // ── Workflow History ─────────────────────────────────────────────────

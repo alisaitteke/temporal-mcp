@@ -1,3 +1,7 @@
+# Source & tests — not needed in published package
+src/
+test/
+
 # Ignore development files
 node_modules/
 *.log
@@ -9,20 +13,18 @@ node_modules/
 # Keep important files
 !README.md
 !LICENSE
-!CHANGELOG.md
-!server.json
+!mcp.json
 
-# Defaults
+# Config files
 package-lock.json
 tsconfig.json
 tsup.config.ts
-vitest.config.t
+vitest.config.ts
 .gitignore
-DEVELOPMENT.md
-CONTRIBUTING.md
-coverage
+.cursor/
+.idea/
+coverage/
 .taskmaster
-.idea
 app_data
 .mcpregistry_registry_token
 .mcpregistry_github_token

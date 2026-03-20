@@ -135,7 +135,25 @@ export async function handleListSchedules(
   }
 
   if (data.nextPageToken) lines.push(`*Next page token: ${data.nextPageToken}*`);
-  return { content: [{ type: 'text', text: lines.join('\n') }] };
+  return {
+    content: [{ type: 'text', text: lines.join('\n') }],
+    structuredContent: {
+      namespace: ns,
+      schedules: schedules.map((s) => {
+        const info = s.info as Record<string, unknown> | undefined;
+        const state = s.state as Record<string, unknown> | undefined;
+        const wt = info?.workflowType as Record<string, unknown> | undefined;
+        const future = info?.futureActionTimes as string[] | undefined;
+        return {
+          scheduleId: s.scheduleId,
+          workflowType: wt?.name ?? info?.workflowType,
+          paused: state?.paused,
+          nextRun: future?.[0] ?? null,
+        };
+      }),
+      nextPageToken: data.nextPageToken,
+    },
+  };
 }
 
 export async function handleDescribeSchedule(

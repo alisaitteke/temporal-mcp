@@ -6,6 +6,68 @@ import type { ToolResult } from '../types.js';
 
 export const workflowToolDefinitions = [
   {
+    name: 'count_workflows',
+    description:
+      'Count workflow executions matching an optional visibility query. Useful for dashboards and health checks.',
+    inputSchema: {
+      type: 'object' as const,
+      properties: {
+        namespace: { type: 'string', description: 'Target namespace.' },
+        query: {
+          type: 'string',
+          description: 'Visibility query filter (e.g. "ExecutionStatus=\'Running\'"). Leave empty to count all.',
+        },
+      },
+      required: [],
+    },
+  },
+  {
+    name: 'pause_workflow',
+    description:
+      'Pause a running workflow execution. The workflow will stop scheduling new tasks until unpaused.',
+    inputSchema: {
+      type: 'object' as const,
+      properties: {
+        namespace: { type: 'string', description: 'Namespace containing the workflow.' },
+        workflow_id: { type: 'string', description: 'Workflow ID to pause.' },
+        run_id: { type: 'string', description: 'Specific run ID (optional).' },
+        reason: { type: 'string', description: 'Human-readable reason for pausing.' },
+      },
+      required: ['workflow_id'],
+    },
+  },
+  {
+    name: 'unpause_workflow',
+    description: 'Resume a previously paused workflow execution.',
+    inputSchema: {
+      type: 'object' as const,
+      properties: {
+        namespace: { type: 'string', description: 'Namespace containing the workflow.' },
+        workflow_id: { type: 'string', description: 'Workflow ID to unpause.' },
+        run_id: { type: 'string', description: 'Specific run ID (optional).' },
+      },
+      required: ['workflow_id'],
+    },
+  },
+  {
+    name: 'signal_with_start_workflow',
+    description:
+      'Start a workflow and send a signal atomically. If the workflow is already running, only the signal is sent. Ideal for event-driven patterns.',
+    inputSchema: {
+      type: 'object' as const,
+      properties: {
+        namespace: { type: 'string', description: 'Target namespace.' },
+        workflow_id: { type: 'string', description: 'Workflow ID to start or signal.' },
+        workflow_type: { type: 'string', description: 'Workflow type to start if not already running.' },
+        task_queue: { type: 'string', description: 'Task queue for the workflow.' },
+        signal_name: { type: 'string', description: 'Signal name to send.' },
+        signal_input: { description: 'Signal payload. Will be JSON-encoded.' },
+        workflow_input: { description: 'Workflow start input (used only if starting fresh).' },
+      },
+      required: ['workflow_id', 'workflow_type', 'task_queue', 'signal_name'],
+    },
+  },
+  {
     name: 'list_workflows',
     description:
       'List or search workflow executions in a namespace. Supports Temporal\'s query syntax (e.g. `WorkflowType=\'OrderWorkflow\' AND ExecutionStatus=\'Running\'`). Returns status, type, start time, and IDs.',
@@ -146,6 +208,34 @@ export const workflowToolDefinitions = [
 
 // ─── Zod input schemas ────────────────────────────────────────────────────────
 
+export const countWorkflowsSchema = z.object({
+  namespace: z.string().optional(),
+  query: z.string().optional(),
+});
+
+export const pauseWorkflowSchema = z.object({
+  namespace: z.string().optional(),
+  workflow_id: z.string(),
+  run_id: z.string().optional(),
+  reason: z.string().optional(),
+});
+
+export const unpauseWorkflowSchema = z.object({
+  namespace: z.string().optional(),
+  workflow_id: z.string(),
+  run_id: z.string().optional(),
+});
+
+export const signalWithStartWorkflowSchema = z.object({
+  namespace: z.string().optional(),
+  workflow_id: z.string(),
+  workflow_type: z.string(),
+  task_queue: z.string(),
+  signal_name: z.string(),
+  signal_input: z.unknown().optional(),
+  workflow_input: z.unknown().optional(),
+});
+
 export const listWorkflowsSchema = z.object({
   namespace: z.string().optional(),
   query: z.string().optional(),
@@ -269,7 +359,26 @@ export async function handleListWorkflows(
     lines.push(`*Next page token: ${data.nextPageToken}*`);
   }
 
-  return { content: [{ type: 'text', text: lines.join('\n') }] };
+  return {
+    content: [{ type: 'text', text: lines.join('\n') }],
+    structuredContent: {
+      namespace: ns,
+      count: executions.length,
+      workflows: executions.map((exec) => {
+        const execution = exec.execution as Record<string, unknown> | undefined;
+        const type = exec.type as Record<string, unknown> | undefined;
+        return {
+          workflowId: execution?.workflowId,
+          runId: execution?.runId,
+          type: type?.name,
+          status: extractStatus(exec),
+          startTime: exec.startTime,
+          closeTime: exec.closeTime,
+        };
+      }),
+      nextPageToken: data.nextPageToken,
+    },
+  };
 }
 
 export async function handleDescribeWorkflow(
@@ -323,7 +432,21 @@ export async function handleDescribeWorkflow(
     }
   }
 
-  return { content: [{ type: 'text', text: lines.join('\n') }] };
+  return {
+    content: [{ type: 'text', text: lines.join('\n') }],
+    structuredContent: {
+      workflowId: execution?.workflowId,
+      runId: execution?.runId,
+      type: type?.name,
+      status: execInfo ? extractStatus(execInfo) : undefined,
+      startTime: execInfo?.startTime,
+      closeTime: execInfo?.closeTime,
+      taskQueue: (() => { const tq = execInfo?.taskQueue as Record<string, unknown> | undefined; return tq?.name ?? execInfo?.taskQueue; })(),
+      historyLength: execInfo?.historyLength,
+      pendingActivities: pendingActs?.length ?? 0,
+      pendingChildren: pendingChildren?.length ?? 0,
+    },
+  };
 }
 
 /** Encodes a value as a Temporal payload (base64 JSON). */
@@ -469,6 +592,120 @@ export async function handleTerminateWorkflow(
     content: [{
       type: 'text',
       text: `Workflow "${args.workflow_id}" terminated${args.reason ? ` (reason: ${args.reason})` : ''}.`,
+    }],
+  };
+}
+
+export async function handleCountWorkflows(
+  args: z.infer<typeof countWorkflowsSchema>,
+  client: TemporalClient
+): Promise<ToolResult> {
+  const ns = client.ns(args.namespace);
+  const data = await client.get<Record<string, unknown>>(
+    `/api/v1/namespaces/${encodeURIComponent(ns)}/workflow-count`,
+    { query: args.query }
+  );
+
+  const count = data.count ?? 0;
+  const groups = data.groups as Record<string, unknown>[] | undefined;
+
+  const lines = [
+    `# Workflow Count in "${ns}"`,
+    '',
+    `Total: **${count}**`,
+  ];
+
+  if (groups?.length) {
+    lines.push('', '## Breakdown');
+    for (const g of groups) {
+      const groupValues = g.groupValues as Record<string, unknown>[] | undefined;
+      const label = groupValues?.map((v) => v.data ?? v).join(', ') ?? JSON.stringify(g);
+      lines.push(`- ${label}: ${g.count}`);
+    }
+  }
+
+  return {
+    content: [{ type: 'text', text: lines.join('\n') }],
+    structuredContent: {
+      namespace: ns,
+      count: Number(count),
+      query: args.query ?? null,
+      groups: groups?.map((g) => ({
+        count: g.count,
+        groupValues: g.groupValues,
+      })) ?? [],
+    },
+  };
+}
+
+export async function handlePauseWorkflow(
+  args: z.infer<typeof pauseWorkflowSchema>,
+  client: TemporalClient
+): Promise<ToolResult> {
+  const ns = client.ns(args.namespace);
+  const body: Record<string, unknown> = {};
+  if (args.run_id) body.workflowExecution = { workflowId: args.workflow_id, runId: args.run_id };
+  if (args.reason) body.reason = args.reason;
+
+  await client.post(
+    `/api/v1/namespaces/${encodeURIComponent(ns)}/workflows/${encodeURIComponent(args.workflow_id)}/pause`,
+    body
+  );
+
+  return {
+    content: [{
+      type: 'text',
+      text: `Workflow "${args.workflow_id}" paused${args.reason ? ` (reason: ${args.reason})` : ''}.`,
+    }],
+  };
+}
+
+export async function handleUnpauseWorkflow(
+  args: z.infer<typeof unpauseWorkflowSchema>,
+  client: TemporalClient
+): Promise<ToolResult> {
+  const ns = client.ns(args.namespace);
+  const body: Record<string, unknown> = {};
+  if (args.run_id) body.workflowExecution = { workflowId: args.workflow_id, runId: args.run_id };
+
+  await client.post(
+    `/api/v1/namespaces/${encodeURIComponent(ns)}/workflows/${encodeURIComponent(args.workflow_id)}/unpause`,
+    body
+  );
+
+  return {
+    content: [{ type: 'text', text: `Workflow "${args.workflow_id}" unpaused.` }],
+  };
+}
+
+export async function handleSignalWithStartWorkflow(
+  args: z.infer<typeof signalWithStartWorkflowSchema>,
+  client: TemporalClient
+): Promise<ToolResult> {
+  const ns = client.ns(args.namespace);
+  const body: Record<string, unknown> = {
+    workflowType: { name: args.workflow_type },
+    taskQueue: { name: args.task_queue },
+    signalName: args.signal_name,
+  };
+
+  if (args.signal_input !== undefined) body.signalInput = { payloads: [encodePayload(args.signal_input)] };
+  if (args.workflow_input !== undefined) body.input = { payloads: [encodePayload(args.workflow_input)] };
+
+  const data = await client.post<Record<string, unknown>>(
+    `/api/v1/namespaces/${encodeURIComponent(ns)}/workflows/${encodeURIComponent(args.workflow_id)}/signal-with-start/${encodeURIComponent(args.signal_name)}`,
+    body
+  );
+
+  return {
+    content: [{
+      type: 'text',
+      text: [
+        `# signal_with_start: "${args.workflow_id}"`,
+        `- Signal: ${args.signal_name}`,
+        `- Run ID: ${data.runId ?? 'N/A'}`,
+        `- Started: ${data.started !== undefined ? data.started : 'yes (or already running)'}`,
+      ].join('\n'),
     }],
   };
 }

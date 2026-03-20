@@ -83,7 +83,25 @@ export async function handleListActivities(
   }
 
   if (data.nextPageToken) lines.push(`*Next page token: ${data.nextPageToken}*`);
-  return { content: [{ type: 'text', text: lines.join('\n') }] };
+  return {
+    content: [{ type: 'text', text: lines.join('\n') }],
+    structuredContent: {
+      namespace: ns,
+      activities: activities.map((act) => {
+        const actType = act.activityType as Record<string, unknown> | undefined;
+        const exec = act.execution as Record<string, unknown> | undefined;
+        return {
+          activityId: act.activityId,
+          type: actType?.name,
+          workflowId: exec?.workflowId,
+          state: act.state,
+          scheduleTime: act.scheduleTime,
+          startTime: act.startTime,
+        };
+      }),
+      nextPageToken: data.nextPageToken,
+    },
+  };
 }
 
 export async function handleDescribeActivity(
