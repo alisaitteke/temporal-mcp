@@ -1,6 +1,6 @@
 {
   "name": "@alisaitteke/temporal-mcp",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "author": "Ali Sait Teke",
   "description": "MCP server for the Temporal HTTP API — manage workflows, namespaces, and schedules from any MCP-compatible IDE",
   "type": "module",
