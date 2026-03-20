@@ -13,6 +13,7 @@
     "README.md",
     "mcp.json"
   ],
+  "mcpName": "io.github.alisaitteke/temporal-mcp",
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
