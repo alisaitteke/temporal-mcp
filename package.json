@@ -1,6 +1,7 @@
 {
   "name": "@alisaitteke/temporal-mcp",
   "version": "0.1.0",
+  "author": "Ali Sait Teke",
   "description": "MCP server for the Temporal HTTP API — manage workflows, namespaces, and schedules from any MCP-compatible IDE",
   "type": "module",
   "main": "dist/index.js",
@@ -27,6 +28,9 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/alisaitteke/temporal-mcp.git"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "keywords": [
     "temporal",
