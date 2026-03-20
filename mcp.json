@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "temporal": {
+      "command": "npx",
+      "args": ["-y", "temporal-mcp"],
+      "env": {
+        "TEMPORAL_ADDRESS": "http://localhost:8080",
+        "TEMPORAL_NAMESPACE": "default"
+      }
+    }
+  }
+}

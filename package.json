@@ -1,0 +1,45 @@
+{
+  "name": "temporal-mcp",
+  "version": "0.1.0",
+  "description": "MCP server for the Temporal HTTP API — manage workflows, namespaces, and schedules from any MCP-compatible IDE",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "temporal-mcp": "bin/temporal-mcp.js"
+  },
+  "files": [
+    "dist",
+    "bin",
+    "README.md",
+    "mcp.json"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": [
+    "temporal",
+    "mcp",
+    "model-context-protocol",
+    "workflow",
+    "cursor",
+    "claude"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.25.3",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsup": "^8.5.1",
+    "typescript": "^5.5.0",
+    "vitest": "^2.1.0"
+  }
+}
